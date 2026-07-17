@@ -29,6 +29,7 @@ export default defineConfig({
     headless: process.env.HEADLESS === 'true',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   },
   projects: [
     { name: 'Chromium', use: { browserName: 'chromium' } },
