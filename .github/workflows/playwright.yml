@@ -43,7 +43,7 @@ jobs:
       - name: Show environment
         run: |
           ENV_NAME="${{ github.event.inputs.environment || 'staging' }}"
-          echo "### 🔹 Environment: $ENV_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔹 Environment: $ENV_NAME — ${{ vars.BASE_URL }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Run Playwright tests
         run: |
@@ -55,10 +55,11 @@ jobs:
         continue-on-error: true
         env:
           ENV: ${{ github.event.inputs.environment || 'staging' }}
-          HEADLESS: "true"
-          WORKERS: "1"
-          RETRIES: "1"
-          TIMEOUT: "120000"
+          BASE_URL: ${{ vars.BASE_URL }}
+          HEADLESS: ${{ vars.HEADLESS }}
+          WORKERS: ${{ vars.WORKERS }}
+          RETRIES: ${{ vars.RETRIES }}
+          TIMEOUT: ${{ vars.TIMEOUT }}
 
       - name: Upload Playwright Report
         if: always()
