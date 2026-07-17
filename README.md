@@ -2,6 +2,8 @@
 
 Playwright + TypeScript test automation framework for Simplenight's hotel booking flow.
 
+![Test Run](docs/test-run.gif)
+
 ## Setup
 
 ```bash
