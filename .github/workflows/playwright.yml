@@ -1,0 +1,77 @@
+name: Playwright Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: "Select environment"
+        required: true
+        default: "staging"
+        options:
+          - staging
+          - production
+      suite:
+        description: "Select test suite"
+        required: true
+        default: "regression"
+        type: choice
+        options:
+          - regression
+          - smoke
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Show environment
+        run: |
+          ENV_NAME="${{ github.event.inputs.environment || 'staging' }}"
+          echo "### 🔹 Environment: $ENV_NAME" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run Playwright tests
+        run: |
+          if [ "${{ github.event.inputs.suite }}" == "smoke" ]; then
+            npx playwright test -g '@smoke'
+          else
+            npx playwright test
+          fi
+        continue-on-error: true
+        env:
+          ENV: ${{ github.event.inputs.environment || 'staging' }}
+          HEADLESS: "true"
+          WORKERS: "1"
+          RETRIES: "1"
+          TIMEOUT: "120000"
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results
+          retention-days: 7
