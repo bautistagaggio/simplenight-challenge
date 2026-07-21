@@ -9,6 +9,8 @@ export class SearchPage {
   private addAdultButton: Locator;
   private addChildButton: Locator;
   private doneButton: Locator;
+  private dialog: Locator;
+  private dialogInput: Locator;
 
   constructor(private page: Page) {
     this.locationTrigger = page.getByRole('textbox', { name: 'Going to' });
@@ -18,15 +20,14 @@ export class SearchPage {
     this.addAdultButton = page.getByRole('button', { name: 'Add Adult' });
     this.addChildButton = page.getByRole('button', { name: 'Add Child' });
     this.doneButton = page.getByRole('button', { name: 'Done' });
+    this.dialog = page.getByRole('dialog');
+    this.dialogInput = this.dialog.getByRole('textbox');
   }
 
   async searchLocation(location: string) {
     await this.locationTrigger.click();
-
-    const dialog = this.page.getByRole('dialog');
-    await dialog.waitFor({ state: 'visible' });
-
-    await dialog.getByRole('textbox').pressSequentially(location);
+    await this.dialog.waitFor({ state: 'visible' });
+    await this.dialogInput.pressSequentially(location);
 
     const option = this.page.getByRole('option', { name: new RegExp(location) }).first();
     await option.waitFor({ state: 'visible' });
@@ -35,12 +36,11 @@ export class SearchPage {
 
   async selectDates(checkIn: string, checkOut: string) {
     await this.datesTrigger.click();
+    await this.dialog.waitFor({ state: 'visible' });
 
     const checkInButton = this.page.getByRole('button', { name: checkIn, exact: true });
     const checkOutButton = this.page.getByRole('button', { name: checkOut, exact: true });
 
-    // Wait for calendar dialog and target date to be available
-    await this.page.getByRole('dialog').waitFor({ state: 'visible' });
     await checkInButton.waitFor({ state: 'visible' });
     await checkInButton.click();
 

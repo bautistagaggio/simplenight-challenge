@@ -5,11 +5,15 @@ export class HotelCardPage {
   private firstCard: Locator;
   private priceByTestId: Locator;
   private ratingByTestId: Locator;
+  private priceFallback: Locator;
+  private scoreFallback: Locator;
 
   constructor(private page: Page) {
     this.firstCard = page.getByRole('article').first();
     this.priceByTestId = this.firstCard.locator('[data-testid$="_price"]');
     this.ratingByTestId = this.firstCard.locator('[data-testid$="_rating"]');
+    this.priceFallback = this.firstCard.locator(':text-matches("^\\\\$\\\\d")').last();
+    this.scoreFallback = this.firstCard.locator(':text-matches("^\\\\d+\\\\.\\\\d+$")').first();
   }
 
   /**
@@ -19,8 +23,7 @@ export class HotelCardPage {
   async getPrice(): Promise<number> {
     await this.firstCard.waitFor({ state: 'visible', timeout: 15000 });
 
-    // Target the price element: look for text matching $XXX pattern within the card
-    // In grid view: [data-testid$="_price"], in map popup: element after "Total"
+    // In grid view: [data-testid$="_price"]
     if (await this.priceByTestId.count() > 0) {
       const text = await this.priceByTestId.textContent() || '';
       const match = text.match(/\$(\d[\d,]*)/);
@@ -28,8 +31,7 @@ export class HotelCardPage {
     }
 
     // Map popup fallback: price is in the element right after "Total"
-    const priceElement = this.firstCard.locator(':text-matches("^\\\\$\\\\d")').last();
-    const text = await priceElement.textContent() || '';
+    const text = await this.priceFallback.textContent() || '';
     const match = text.match(/\$(\d[\d,]*)/);
     return match ? parseInt(match[1].replace(',', ''), 10) : 0;
   }
@@ -41,7 +43,7 @@ export class HotelCardPage {
   async getGuestScore(): Promise<number> {
     await this.firstCard.waitFor({ state: 'visible', timeout: 15000 });
 
-    // Target the rating element: [data-testid$="_rating"] in grid view
+    // In grid view: [data-testid$="_rating"]
     if (await this.ratingByTestId.count() > 0) {
       const text = await this.ratingByTestId.textContent() || '';
       const match = text.match(/(\d+\.\d+)/);
@@ -49,9 +51,7 @@ export class HotelCardPage {
     }
 
     // Map popup fallback: score is the element containing X.X format
-    // followed by a rating label (Excellent, Very Good, etc.)
-    const scoreElement = this.firstCard.locator(':text-matches("^\\\\d+\\\\.\\\\d+$")').first();
-    const text = await scoreElement.textContent() || '';
+    const text = await this.scoreFallback.textContent() || '';
     const match = text.match(/(\d+\.\d+)/);
     return match ? parseFloat(match[1]) : 0;
   }
