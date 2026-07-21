@@ -1,18 +1,24 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { config } from '../playwright.config';
 
 export class HomePage {
 
-  constructor(private page: Page) {}
+  private navigation: Locator;
+  private searchFormInput: Locator;
+
+  constructor(private page: Page) {
+    this.navigation = page.getByRole('navigation').first();
+    this.searchFormInput = page.getByRole('textbox', { name: 'Going to' });
+  }
 
   async navigate() {
     await this.page.goto(config.baseUrl);
-    await this.page.getByRole('navigation').first().waitFor({ state: 'visible' });
+    await this.navigation.waitFor({ state: 'visible' });
   }
 
   async selectCategory(category: string) {
     await this.page.getByRole('link', { name: category }).click();
     // Wait for the category search form to render
-    await this.page.getByRole('textbox', { name: 'Going to' }).waitFor({ state: 'visible' });
+    await this.searchFormInput.waitFor({ state: 'visible' });
   }
 }

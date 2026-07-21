@@ -54,7 +54,7 @@ export class HotelFlow {
     });
 
     await test.step('Zoom in and select hotel from map', async () => {
-      await this.resultsPage.zoomInOnMap(10);
+      await this.resultsPage.zoomInOnMap(15);
       await this.resultsPage.selectHotelFromMap(0);
     });
   }

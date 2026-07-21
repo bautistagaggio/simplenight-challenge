@@ -11,7 +11,6 @@ export class SearchPage {
   private doneButton: Locator;
 
   constructor(private page: Page) {
-    this.page = page;
     this.locationTrigger = page.getByRole('textbox', { name: 'Going to' });
     this.datesTrigger = page.getByRole('textbox', { name: 'Dates' });
     this.travelersTrigger = page.getByRole('textbox', { name: 'Travelers' });

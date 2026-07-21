@@ -5,18 +5,23 @@ export class ResultsPage {
   private mapViewRadio: Locator;
   private priceFilterSlider: Locator;
   private mapContainer: Locator;
+  private progressBar: Locator;
+  private resultsCount: Locator;
+  private mapMarkers: Locator;
 
   constructor(private page: Page) {
-    this.page = page;
     this.mapViewRadio = page.getByRole('radio', { name: 'Map' });
     this.priceFilterSlider = page.getByTestId('category(static_hotels)_search-results_price-filter_slider-root');
     this.mapContainer = page.getByTestId('map');
+    this.progressBar = page.getByRole('progressbar');
+    this.resultsCount = page.getByText(/Showing \d+ out of \d+ Properties/);
+    this.mapMarkers = page.locator('gmp-advanced-marker');
   }
 
   async switchToMapView() {
     // Wait for results to finish loading (progress bar gone, results count visible)
-    await this.page.getByRole('progressbar').waitFor({ state: 'hidden', timeout: 60000 });
-    await this.page.getByText(/Showing \d+ out of \d+ Properties/).waitFor({ state: 'visible' });
+    await this.progressBar.waitFor({ state: 'hidden', timeout: 60000 });
+    await this.resultsCount.waitFor({ state: 'visible' });
 
     await this.mapViewRadio.click();
     await this.mapContainer.waitFor({ state: 'visible' });
@@ -61,7 +66,7 @@ export class ResultsPage {
     const centerY = mapBox.y + mapBox.height / 2;
 
     // Wait for at least one marker (cluster or individual) before zooming
-    await this.page.locator('gmp-advanced-marker').first().waitFor({ state: 'attached' });
+    await this.mapMarkers.first().waitFor({ state: 'attached' });
 
     await this.page.mouse.move(centerX, centerY);
 
@@ -70,6 +75,8 @@ export class ResultsPage {
     await this.page.keyboard.down('Control');
     for (let i = 0; i < times; i++) {
       await this.page.mouse.wheel(0, -500);
+      // 200ms pause between scroll events is required for Google Maps
+      // to register them as separate zoom steps (not a hard sleep workaround)
       await this.page.waitForTimeout(200);
     }
     await this.page.keyboard.up('Control');

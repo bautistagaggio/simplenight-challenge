@@ -3,10 +3,13 @@ import { expect, Locator, Page } from '@playwright/test';
 export class HotelCardPage {
 
   private firstCard: Locator;
+  private priceByTestId: Locator;
+  private ratingByTestId: Locator;
 
   constructor(private page: Page) {
-    this.page = page;
     this.firstCard = page.getByRole('article').first();
+    this.priceByTestId = this.firstCard.locator('[data-testid$="_price"]');
+    this.ratingByTestId = this.firstCard.locator('[data-testid$="_rating"]');
   }
 
   /**
@@ -18,9 +21,8 @@ export class HotelCardPage {
 
     // Target the price element: look for text matching $XXX pattern within the card
     // In grid view: [data-testid$="_price"], in map popup: element after "Total"
-    const priceByTestId = this.firstCard.locator('[data-testid$="_price"]');
-    if (await priceByTestId.count() > 0) {
-      const text = await priceByTestId.textContent() || '';
+    if (await this.priceByTestId.count() > 0) {
+      const text = await this.priceByTestId.textContent() || '';
       const match = text.match(/\$(\d[\d,]*)/);
       return match ? parseInt(match[1].replace(',', ''), 10) : 0;
     }
@@ -40,9 +42,8 @@ export class HotelCardPage {
     await this.firstCard.waitFor({ state: 'visible', timeout: 15000 });
 
     // Target the rating element: [data-testid$="_rating"] in grid view
-    const ratingByTestId = this.firstCard.locator('[data-testid$="_rating"]');
-    if (await ratingByTestId.count() > 0) {
-      const text = await ratingByTestId.textContent() || '';
+    if (await this.ratingByTestId.count() > 0) {
+      const text = await this.ratingByTestId.textContent() || '';
       const match = text.match(/(\d+\.\d+)/);
       return match ? parseFloat(match[1]) : 0;
     }
@@ -56,6 +57,7 @@ export class HotelCardPage {
   }
 
   async assertPriceWithinRange(min: number, max: number) {
+    await this.firstCard.waitFor({ state: 'visible', timeout: 15000 });
     const price = await this.getPrice();
     expect(price, `Hotel card price $${price} should be >= $${min}`).toBeGreaterThanOrEqual(min);
     if (max < 1000) {
