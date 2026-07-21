@@ -3,55 +3,25 @@ import { expect, Locator, Page } from '@playwright/test';
 export class HotelCardPage {
 
   private firstCard: Locator;
-  private priceByTestId: Locator;
-  private ratingByTestId: Locator;
-  private priceFallback: Locator;
-  private scoreFallback: Locator;
+  private totalPrice: Locator;
+  private guestScore: Locator;
 
   constructor(private page: Page) {
     this.firstCard = page.getByRole('article').first();
-    this.priceByTestId = this.firstCard.locator('[data-testid$="_price"]');
-    this.ratingByTestId = this.firstCard.locator('[data-testid$="_rating"]');
-    this.priceFallback = this.firstCard.locator(':text-matches("^\\\\$\\\\d")').last();
-    this.scoreFallback = this.firstCard.locator(':text-matches("^\\\\d+\\\\.\\\\d+$")').first();
+    this.totalPrice = this.firstCard.getByText(/^\$\d/);
+    this.guestScore = this.firstCard.getByText(/^\d+\.\d+$/);
   }
 
-  /**
-   * Extract price from the hotel card using a targeted locator.
-   * The price element contains text like "$152" and is preceded by "Total".
-   */
   async getPrice(): Promise<number> {
     await this.firstCard.waitFor({ state: 'visible', timeout: 15000 });
-
-    // In grid view: [data-testid$="_price"]
-    if (await this.priceByTestId.count() > 0) {
-      const text = await this.priceByTestId.textContent() || '';
-      const match = text.match(/\$(\d[\d,]*)/);
-      return match ? parseInt(match[1].replace(',', ''), 10) : 0;
-    }
-
-    // Map popup fallback: price is in the element right after "Total"
-    const text = await this.priceFallback.textContent() || '';
+    const text = await this.totalPrice.first().textContent() || '';
     const match = text.match(/\$(\d[\d,]*)/);
     return match ? parseInt(match[1].replace(',', ''), 10) : 0;
   }
 
-  /**
-   * Extract guest score from the hotel card using a targeted locator.
-   * The score element contains a decimal like "10.0" or "9.4".
-   */
   async getGuestScore(): Promise<number> {
     await this.firstCard.waitFor({ state: 'visible', timeout: 15000 });
-
-    // In grid view: [data-testid$="_rating"]
-    if (await this.ratingByTestId.count() > 0) {
-      const text = await this.ratingByTestId.textContent() || '';
-      const match = text.match(/(\d+\.\d+)/);
-      return match ? parseFloat(match[1]) : 0;
-    }
-
-    // Map popup fallback: score is the element containing X.X format
-    const text = await this.scoreFallback.textContent() || '';
+    const text = await this.guestScore.first().textContent() || '';
     const match = text.match(/(\d+\.\d+)/);
     return match ? parseFloat(match[1]) : 0;
   }
